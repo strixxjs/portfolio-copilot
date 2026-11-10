@@ -49,7 +49,7 @@ from app.schemas.events import (
     ToolResultSummaryEvent,
     UsageSummary,
 )
-from app.schemas.tools import QueryProjectDataOutput
+from app.schemas.tools import QueryProjectDataOutput, SearchDocumentsInput
 from app.tools.base import ToolContext, ToolError, ToolFailure, ToolRegistry
 from app.tracing.models import SpanKind
 from app.tracing.tracer import Tracer
@@ -90,8 +90,10 @@ class AgentLoop:
         tracer: Tracer,
         ctx: RequestContext,
         tools_ctx: ToolContext,
+        max_top_k: int | None = None,
     ) -> None:
         self.s = settings
+        self.max_top_k = max_top_k
         self.gateway = gateway
         self.registry = registry
         self.tracer = tracer
@@ -332,6 +334,9 @@ class AgentLoop:
                 yield ev
             return
 
+        if self.max_top_k is not None and isinstance(args, SearchDocumentsInput) and args.top_k > self.max_top_k:
+            # The request's top_k is an upper bound; the model may ask for fewer, never for more.
+            args = args.model_copy(update={"top_k": self.max_top_k})
         fingerprint = tool.name + ":" + args.model_dump_json()
         if fingerprint in self.state.seen_calls:
             # Identical call already ran in this request: answer from memory instead of paying for it again.

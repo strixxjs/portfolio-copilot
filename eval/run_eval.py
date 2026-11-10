@@ -214,7 +214,7 @@ def render_md(report: dict[str, Any]) -> str:
         f"- run: `{report['run_id']}` · git `{report['git_sha']}` · date {report['date']}",
         f"- provider: `{report['provider']}` · models: fast `{report['models']['fast']}`, strong `{report['models']['strong']}`",
         f"- embeddings: `{s['embedding_provider']}` ({s['embedding_model']}) · rerank: {s['rerank_enabled']} · "
-        f"LLM cache: {s['cache']} · max_steps: {s['max_steps']} · top_k: {s['top_k']}",
+        f"LLM cache: {s['cache']} · max_steps: {s['max_steps']} · search top_k cap: {s['top_k']}",
         "- corpus: **synthetic** (seed 42, 111 documents, 460 chunks)",
     ]
     if offline:

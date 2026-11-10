@@ -68,7 +68,11 @@ def call(args: str, cid: str = "c1") -> Any:
 
 
 async def run(
-    prov: CannedProvider, max_tokens: int = 24_000, tool: Tool[Any, Any] | None = None, **settings: Any
+    prov: CannedProvider,
+    max_tokens: int = 24_000,
+    tool: Tool[Any, Any] | None = None,
+    max_top_k: int | None = None,
+    **settings: Any,
 ) -> tuple[list[Any], AgentLoop]:
     s = make_settings(**settings)
     registry = ToolRegistry()
@@ -85,7 +89,7 @@ async def run(
         settings=s,  # type: ignore[arg-type]
         request_ctx=ctx,
     )
-    loop = AgentLoop(s, gw, registry, tracer, ctx, tctx)
+    loop = AgentLoop(s, gw, registry, tracer, ctx, tctx, max_top_k=max_top_k)
     return [ev async for ev in loop.run("question?", None)], loop
 
 
@@ -252,3 +256,12 @@ def test_groq_parse_failure_is_mapped_to_repairable_rejection() -> None:
         )
     )
     assert isinstance(err, ToolCallRejected) and err.tool is None
+
+
+async def test_request_top_k_caps_the_models_choice() -> None:
+    prov = CannedProvider(
+        [route("documents"), call('{"query": "rebar", "top_k": 20}'), fake_response("Ok [P1-RFI-003#2].")]
+    )
+    events, _ = await run(prov, max_top_k=8)
+    tool_call = next(e for e in events if e.type == "tool_call")
+    assert tool_call.args["top_k"] == 8

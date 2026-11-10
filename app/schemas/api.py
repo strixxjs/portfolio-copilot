@@ -13,7 +13,9 @@ class AskRequest(BaseModel):
 
     question: str = Field(min_length=1, max_length=2000)
     project_id: str | None = Field(default=None, pattern=r"^P[0-9]+$")
-    top_k: int | None = Field(default=None, ge=1, le=20)
+    top_k: int | None = Field(
+        default=None, ge=1, le=20, description="Upper bound for search_documents.top_k in this request"
+    )
 
 
 class DebugSearchResponse(BaseModel):

@@ -47,7 +47,7 @@ async def run_question(services: Services, principal: Principal, body: AskReques
         settings=s,
         request_ctx=ctx,
     )
-    loop = AgentLoop(s, services.gateway, services.registry, tracer, ctx, tools_ctx)
+    loop = AgentLoop(s, services.gateway, services.registry, tracer, ctx, tools_ctx, max_top_k=body.top_k)
     error: str | None = None
     try:
         async for ev in loop.run(body.question, body.project_id):
