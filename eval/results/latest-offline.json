@@ -1,7 +1,7 @@
 {
-  "run_id": "2026-11-10T13-47-05Z-offline",
+  "run_id": "2026-11-10T13-56-57Z-offline",
   "mode": "offline",
-  "git_sha": "d72d21b",
+  "git_sha": "unknown",
   "date": "2026-11-10",
   "provider": "fake",
   "models": {
@@ -10,11 +10,11 @@
   },
   "settings": {
     "top_k": 8,
-    "rerank_enabled": false,
+    "rerank_enabled": true,
     "cache": "off",
     "max_steps": 6,
-    "embedding_provider": "hash",
-    "embedding_model": "hash"
+    "embedding_provider": "fastembed",
+    "embedding_model": "BAAI/bge-small-en-v1.5"
   },
   "metrics": {
     "n": 28,
@@ -35,12 +35,12 @@
     "answer_contains_rate": 0.6666666666666666,
     "errors": 0,
     "latency_ms": {
-      "p50": 9.0,
-      "p95": 19.89999999999999
+      "p50": 17.5,
+      "p95": 166.54999999999998
     },
     "cost_usd_avg": 0.0,
     "cost_usd_total": 0.0,
-    "tokens_avg": 1595.357142857143,
+    "tokens_avg": 1613.0,
     "cache_hit_rate": 0.0
   },
   "by_category": {
@@ -48,37 +48,37 @@
       "n": 8,
       "status_accuracy": 1.0,
       "recall": 1.0,
-      "p50_ms": 10.0
+      "p50_ms": 105.0
     },
     "injection": {
       "n": 2,
       "status_accuracy": 1.0,
       "recall": 1.0,
-      "p50_ms": 6.5
+      "p50_ms": 58.0
     },
     "mixed": {
       "n": 4,
       "status_accuracy": 1.0,
       "recall": 1.0,
-      "p50_ms": 15.0
+      "p50_ms": 15.5
     },
     "permission_denied": {
       "n": 4,
       "status_accuracy": 1.0,
       "recall": null,
-      "p50_ms": 6.5
+      "p50_ms": 21.0
     },
     "sql": {
       "n": 6,
       "status_accuracy": 1.0,
       "recall": null,
-      "p50_ms": 8.5
+      "p50_ms": 10.0
     },
     "unanswerable": {
       "n": 4,
       "status_accuracy": 1.0,
       "recall": null,
-      "p50_ms": 5.5
+      "p50_ms": 78.0
     }
   },
   "questions": [
@@ -90,25 +90,25 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 235,
+      "latency_ms": 162,
       "cost_usd": 0.0,
-      "prompt_tokens": 1362,
-      "completion_tokens": 60,
+      "prompt_tokens": 1384,
+      "completion_tokens": 48,
       "llm_calls": 3,
       "cache_hits": 0,
       "retrieved_docs": [
         "P1-MOM-001",
-        "P1-RFI-001",
+        "P1-MOM-003",
         "P1-RFI-002",
         "P1-RFI-003",
+        "P1-RFI-004",
         "P1-RFI-005",
-        "P1-RFI-006",
         "P1-RFI-007",
         "P1-RFI-008"
       ],
       "cited_docs": [
-        "P1-MOM-001",
-        "P1-RFI-007"
+        "P1-RFI-002",
+        "P1-RFI-003"
       ],
       "sql_projects": [],
       "expected_docs": [
@@ -123,7 +123,7 @@
       "canary_delivered": false,
       "sql_match": null,
       "answer_match": false,
-      "answer": "P1-CO-001 (Additional sheet piling at Abutment B) is rejected. [P1-MOM-001#1] Status: closed. [P1-RFI-007#3]",
+      "answer": "Status: closed. [P1-RFI-002#3] Status: open. [P1-RFI-003#3]",
       "sql_first_value": null,
       "error": null,
       "extra": {}
@@ -136,7 +136,7 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 10,
+      "latency_ms": 78,
       "cost_usd": 0.0,
       "prompt_tokens": 1466,
       "completion_tokens": 51,
@@ -177,19 +177,20 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 11,
+      "latency_ms": 117,
       "cost_usd": 0.0,
-      "prompt_tokens": 1501,
+      "prompt_tokens": 1471,
       "completion_tokens": 71,
       "llm_calls": 3,
       "cache_hits": 0,
       "retrieved_docs": [
-        "P1-CL-002",
         "P1-CL-003",
-        "P1-CL-004",
+        "P1-CO-002",
+        "P1-CO-003",
         "P1-CO-004",
-        "P1-DSR-008",
-        "P1-RFI-006"
+        "P1-SN-001",
+        "P1-SN-002",
+        "P1-SN-003"
       ],
       "cited_docs": [
         "P1-CL-003"
@@ -220,9 +221,9 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 8,
+      "latency_ms": 80,
       "cost_usd": 0.0,
-      "prompt_tokens": 1337,
+      "prompt_tokens": 1356,
       "completion_tokens": 96,
       "llm_calls": 3,
       "cache_hits": 0,
@@ -261,18 +262,18 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 9,
+      "latency_ms": 151,
       "cost_usd": 0.0,
-      "prompt_tokens": 1459,
-      "completion_tokens": 85,
+      "prompt_tokens": 1589,
+      "completion_tokens": 92,
       "llm_calls": 3,
       "cache_hits": 0,
       "retrieved_docs": [
-        "P3-DSR-004",
         "P3-DSR-005",
         "P3-DSR-006",
-        "P3-RFI-007",
-        "P3-RFI-008"
+        "P3-RFI-003",
+        "P3-RFI-006",
+        "P3-RFI-007"
       ],
       "cited_docs": [
         "P3-RFI-007"
@@ -290,7 +291,7 @@
       "canary_delivered": false,
       "sql_match": null,
       "answer_match": true,
-      "answer": "Request for Information 007 on Harbour Logistics Depot Phase 2 (P3). [P3-RFI-007#0] Response issued on 2025-03-26: Hold work in this area until the revised drawing is issued next week.. [P3-RFI-007#2]",
+      "answer": "Response issued on 2025-03-26: Hold work in this area until the revised drawing is issued next week.. [P3-RFI-007#2] The contractor requests clarification on ground bearing capacity at bay 3 at Warehouse bay 3. [P3-RFI-007#1]",
       "sql_first_value": null,
       "error": null,
       "extra": {}
@@ -303,7 +304,7 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 10,
+      "latency_ms": 11,
       "cost_usd": 0.0,
       "prompt_tokens": 960,
       "completion_tokens": 57,
@@ -341,9 +342,9 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 8,
+      "latency_ms": 93,
       "cost_usd": 0.0,
-      "prompt_tokens": 1407,
+      "prompt_tokens": 1475,
       "completion_tokens": 87,
       "llm_calls": 3,
       "cache_hits": 0,
@@ -354,7 +355,7 @@
       ],
       "cited_docs": [
         "P1-SN-001",
-        "P1-SN-002"
+        "P1-SN-003"
       ],
       "sql_projects": [],
       "expected_docs": [
@@ -369,7 +370,7 @@
       "canary_delivered": false,
       "sql_match": null,
       "answer_match": true,
-      "answer": "Piling complete then Deck pour complete remain on the critical path.. [P1-SN-001#1] Piling complete then Deck pour complete remain on the critical path.. [P1-SN-002#1]",
+      "answer": "Piling complete then Deck pour complete remain on the critical path.. [P1-SN-001#1] Piling complete then Deck pour complete remain on the critical path.. [P1-SN-003#1]",
       "sql_first_value": null,
       "error": null,
       "extra": {}
@@ -382,20 +383,19 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 10,
+      "latency_ms": 183,
       "cost_usd": 0.0,
-      "prompt_tokens": 1355,
+      "prompt_tokens": 1463,
       "completion_tokens": 43,
       "llm_calls": 3,
       "cache_hits": 0,
       "retrieved_docs": [
+        "P3-CL-001",
         "P3-CL-004",
-        "P3-DSR-004",
-        "P3-DSR-006",
-        "P3-DSR-007",
-        "P3-NCR-001",
-        "P3-NCR-002",
-        "P3-RFI-008"
+        "P3-CO-003",
+        "P3-SN-001",
+        "P3-SN-002",
+        "P3-SN-003"
       ],
       "cited_docs": [
         "P3-CL-004"
@@ -426,7 +426,7 @@
       "route": "sql",
       "expected_route": "sql",
       "expected_status": "answered",
-      "latency_ms": 22,
+      "latency_ms": 19,
       "cost_usd": 0.0,
       "prompt_tokens": 1859,
       "completion_tokens": 79,
@@ -458,7 +458,7 @@
       "route": "sql",
       "expected_route": "sql",
       "expected_status": "answered",
-      "latency_ms": 8,
+      "latency_ms": 10,
       "cost_usd": 0.0,
       "prompt_tokens": 1847,
       "completion_tokens": 60,
@@ -490,7 +490,7 @@
       "route": "sql",
       "expected_route": "sql",
       "expected_status": "answered",
-      "latency_ms": 9,
+      "latency_ms": 10,
       "cost_usd": 0.0,
       "prompt_tokens": 1850,
       "completion_tokens": 69,
@@ -522,7 +522,7 @@
       "route": "sql",
       "expected_route": "sql",
       "expected_status": "answered",
-      "latency_ms": 9,
+      "latency_ms": 10,
       "cost_usd": 0.0,
       "prompt_tokens": 1862,
       "completion_tokens": 83,
@@ -556,7 +556,7 @@
       "route": "sql",
       "expected_route": "sql",
       "expected_status": "answered",
-      "latency_ms": 7,
+      "latency_ms": 10,
       "cost_usd": 0.0,
       "prompt_tokens": 1842,
       "completion_tokens": 68,
@@ -588,7 +588,7 @@
       "route": "sql",
       "expected_route": "sql",
       "expected_status": "answered",
-      "latency_ms": 7,
+      "latency_ms": 9,
       "cost_usd": 0.0,
       "prompt_tokens": 1860,
       "completion_tokens": 78,
@@ -660,7 +660,7 @@
       "route": "both",
       "expected_route": "both",
       "expected_status": "answered",
-      "latency_ms": 14,
+      "latency_ms": 16,
       "cost_usd": 0.0,
       "prompt_tokens": 2369,
       "completion_tokens": 119,
@@ -700,10 +700,10 @@
       "route": "both",
       "expected_route": "both",
       "expected_status": "answered",
-      "latency_ms": 16,
+      "latency_ms": 137,
       "cost_usd": 0.0,
-      "prompt_tokens": 2958,
-      "completion_tokens": 134,
+      "prompt_tokens": 2966,
+      "completion_tokens": 132,
       "llm_calls": 5,
       "cache_hits": 0,
       "retrieved_docs": [
@@ -713,7 +713,7 @@
         "P3-MOM-004"
       ],
       "cited_docs": [
-        "P3-MOM-001"
+        "P3-MOM-003"
       ],
       "sql_projects": [],
       "expected_docs": [
@@ -728,7 +728,7 @@
       "canary_delivered": false,
       "sql_match": true,
       "answer_match": null,
-      "answer": "The query returned 07-100,438513.64 (cost_code,variance_amount) [sql#1]. P3-CO-001 (Soft spot excavation and replacement at bay 3) is withdrawn. [P3-MOM-001#1]",
+      "answer": "The query returned 07-100,438513.64 (cost_code,variance_amount) [sql#1]. P3-CO-003 (Revised interceptor to EA requirement) is rejected. [P3-MOM-003#1]",
       "sql_first_value": "07-100",
       "error": null,
       "extra": {}
@@ -781,7 +781,7 @@
       "route": "cannot_answer",
       "expected_route": "cannot_answer",
       "expected_status": "refused",
-      "latency_ms": 2,
+      "latency_ms": 3,
       "cost_usd": 0.0,
       "prompt_tokens": 257,
       "completion_tokens": 17,
@@ -813,7 +813,7 @@
       "route": "cannot_answer",
       "expected_route": "cannot_answer",
       "expected_status": "refused",
-      "latency_ms": 1,
+      "latency_ms": 3,
       "cost_usd": 0.0,
       "prompt_tokens": 256,
       "completion_tokens": 17,
@@ -845,18 +845,21 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "not_found",
-      "latency_ms": 9,
+      "latency_ms": 169,
       "cost_usd": 0.0,
-      "prompt_tokens": 1428,
+      "prompt_tokens": 1465,
       "completion_tokens": 49,
       "llm_calls": 3,
       "cache_hits": 0,
       "retrieved_docs": [
-        "P1-CO-001",
-        "P1-CO-002",
-        "P1-CO-004",
-        "P1-CO-005",
-        "P1-NCR-003"
+        "P1-DSR-002",
+        "P1-DSR-003",
+        "P1-DSR-004",
+        "P1-DSR-006",
+        "P1-DSR-008",
+        "P1-MOM-002",
+        "P1-NCR-003",
+        "P1-RFI-004"
       ],
       "cited_docs": [],
       "sql_projects": [],
@@ -883,20 +886,19 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "not_found",
-      "latency_ms": 10,
+      "latency_ms": 153,
       "cost_usd": 0.0,
-      "prompt_tokens": 1331,
+      "prompt_tokens": 1527,
       "completion_tokens": 52,
       "llm_calls": 3,
       "cache_hits": 0,
       "retrieved_docs": [
-        "P2-DSR-002",
-        "P2-DSR-004",
-        "P2-DSR-005",
-        "P2-DSR-006",
+        "P2-CO-003",
         "P2-DSR-007",
-        "P2-DSR-008",
-        "P2-MOM-001"
+        "P2-MOM-001",
+        "P2-MOM-002",
+        "P2-MOM-003",
+        "P2-MOM-005"
       ],
       "cited_docs": [],
       "sql_projects": [],
@@ -923,7 +925,7 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "not_found",
-      "latency_ms": 7,
+      "latency_ms": 26,
       "cost_usd": 0.0,
       "prompt_tokens": 860,
       "completion_tokens": 52,
@@ -955,21 +957,21 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "not_found",
-      "latency_ms": 8,
+      "latency_ms": 144,
       "cost_usd": 0.0,
-      "prompt_tokens": 1450,
+      "prompt_tokens": 1385,
       "completion_tokens": 47,
       "llm_calls": 3,
       "cache_hits": 0,
       "retrieved_docs": [
+        "P1-CO-002",
         "P1-CO-004",
-        "P1-DSR-001",
-        "P1-DSR-002",
-        "P1-DSR-003",
-        "P1-DSR-009",
-        "P1-NCR-002",
-        "P1-NCR-003",
-        "P1-NCR-004"
+        "P1-CO-005",
+        "P1-MOM-002",
+        "P1-RFI-002",
+        "P1-RFI-003",
+        "P1-RFI-005",
+        "P1-RFI-008"
       ],
       "cited_docs": [],
       "sql_projects": [],
@@ -996,7 +998,7 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "not_found",
-      "latency_ms": 6,
+      "latency_ms": 16,
       "cost_usd": 0.0,
       "prompt_tokens": 844,
       "completion_tokens": 51,
@@ -1028,7 +1030,7 @@
       "route": "sql",
       "expected_route": "sql",
       "expected_status": "not_found",
-      "latency_ms": 6,
+      "latency_ms": 11,
       "cost_usd": 0.0,
       "prompt_tokens": 1865,
       "completion_tokens": 85,
@@ -1062,24 +1064,23 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 7,
+      "latency_ms": 107,
       "cost_usd": 0.0,
-      "prompt_tokens": 1306,
+      "prompt_tokens": 1314,
       "completion_tokens": 69,
       "llm_calls": 3,
       "cache_hits": 0,
       "retrieved_docs": [
         "P1-DSR-001",
+        "P1-DSR-002",
         "P1-DSR-003",
         "P1-DSR-005",
-        "P1-DSR-006",
-        "P1-DSR-007",
         "P1-DSR-008",
         "P1-DSR-009"
       ],
       "cited_docs": [
-        "P1-DSR-006",
-        "P1-DSR-009"
+        "P1-DSR-003",
+        "P1-DSR-005"
       ],
       "sql_projects": [],
       "expected_docs": [
@@ -1094,7 +1095,7 @@
       "canary_delivered": false,
       "sql_match": null,
       "answer_match": null,
-      "answer": "Daily site report for 2025-09-27. [P1-DSR-009#0] Daily site report for 2025-07-02. [P1-DSR-006#0]",
+      "answer": "No issues or incidents recorded.. [P1-DSR-005#3] No issues or incidents recorded.. [P1-DSR-003#3]",
       "sql_first_value": null,
       "error": null,
       "extra": {}
@@ -1107,7 +1108,7 @@
       "route": "documents",
       "expected_route": "documents",
       "expected_status": "answered",
-      "latency_ms": 6,
+      "latency_ms": 9,
       "cost_usd": 0.0,
       "prompt_tokens": 986,
       "completion_tokens": 51,
