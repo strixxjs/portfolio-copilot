@@ -237,6 +237,7 @@ async def test_identical_repeated_call_is_not_executed_twice() -> None:
     summaries = [e for e in events if e.type == "tool_result_summary"]
     assert runs["n"] == 1
     assert summaries[1].ok is False and summaries[1].error.message.startswith("duplicate call")
+    assert summaries[1].error.code == "duplicate"
     assert events[-1].status == "answered" and events[-1].flags.tools_disabled == []
 
 

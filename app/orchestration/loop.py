@@ -336,7 +336,7 @@ class AgentLoop:
         if fingerprint in self.state.seen_calls:
             # Identical call already ran in this request: answer from memory instead of paying for it again.
             dup = ToolError(
-                code="invalid_args",
+                code="duplicate",
                 message="duplicate call: these exact arguments already ran in "
                 "this request; use that result or answer now",
                 retryable=False,

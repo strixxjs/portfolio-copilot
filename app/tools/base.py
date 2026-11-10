@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 InT = TypeVar("InT", bound=BaseModel)
 OutT = TypeVar("OutT", bound=BaseModel)
 
-ToolErrorCode = Literal["invalid_args", "not_found", "sql_rejected", "sql_failed", "timeout", "budget", "internal"]
+ToolErrorCode = Literal[
+    "invalid_args", "duplicate", "not_found", "sql_rejected", "sql_failed", "timeout", "budget", "internal"
+]
 
 
 class ToolError(BaseModel):

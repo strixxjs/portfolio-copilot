@@ -176,9 +176,13 @@ async def load(corpus: Corpus) -> dict[str, int]:
             await conn.executemany(
                 "INSERT INTO eval_canaries (doc_id, canary) VALUES ($1,$2)", list(corpus.canaries.items())
             )
-            await conn.execute("ANALYZE")
     finally:
         await conn.close()
+    admin = await asyncpg.connect(s.database_admin_url)
+    try:
+        await admin.execute("ANALYZE")  # table owner only; copilot_app would silently skip every table
+    finally:
+        await admin.close()
     return {
         "projects": len(corpus.projects),
         "documents": len(corpus.documents),
