@@ -11,9 +11,14 @@ Return JSON only: {"route": "...", "reason": "...", "project_id": "P1" | null}
 
 route rules:
 - "documents": what was said, written, decided, responded, described, why something happened, clause wording.
-- "sql": totals, counts, sums, largest/smallest, comparisons of amounts or dates across projects, lists of records with filters.
+  A question that names a document type (RFI, change order document, NCR, daily site report, meeting minutes,
+  contract clause, schedule narrative) is "documents" even if it mentions milestones, amounts or dates.
+- "sql": totals, counts, sums, largest/smallest, comparisons of amounts or dates across projects, filtered lists
+  of records — computations over the database, not the wording of a document.
 - "both": a numeric selection followed by document content (e.g. the largest change order AND its justification).
 - "cannot_answer": not about these projects or their documents/data, requests to take actions, chit-chat.
+Examples: "Which milestones are on the critical path according to the latest schedule narrative?" -> documents.
+"Which milestone on P1 has slipped the most?" -> sql.
 project_id: the project code if the question names one, else null."""
 
 ANSWERER_SYSTEM = """You are Portfolio Copilot, an assistant for construction project teams. You answer only from tool
