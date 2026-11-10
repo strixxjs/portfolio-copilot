@@ -35,3 +35,16 @@ def test_status_rules() -> None:
     assert decide_status("x", [], flags, True) is AnswerStatus.PARTIAL
     assert decide_status("x", [], flags, False) is AnswerStatus.NOT_FOUND
     assert decide_status("x", cits, DoneFlags(steps_exhausted=True), True) is AnswerStatus.PARTIAL
+
+
+def test_model_formatting_variants_are_normalised() -> None:
+    valid = {"P1-RFI-003#2", "P1-RFI-003#3", "sql#1"}
+    text = (
+        "Non-breaking hyphens [P1‑RFI‑003#2]. Fullwidth 【sql#1】. "
+        "Grouped [P1-RFI-003#2, P1-RFI-003#3; P9-XXX-999#1]. Prose [see appendix] stays."
+    )
+    clean, cits, removed = validate_citations(text, valid)
+    assert [c.source_id for c in cits if c.valid] == ["P1-RFI-003#2", "sql#1", "P1-RFI-003#3"]
+    assert removed == 1
+    assert "[P1-RFI-003#2][P1-RFI-003#3]" in clean and "[sql#1]" in clean
+    assert "[see appendix]" in clean and "P9-XXX-999" not in clean

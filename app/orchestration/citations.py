@@ -1,4 +1,9 @@
-"""Post-hoc citation validation and canary stripping. Deterministic; no LLM judge."""
+"""Post-hoc citation validation and canary stripping. Deterministic; no LLM judge.
+
+Models do not always copy keys byte-for-byte: GPT-OSS writes non-breaking hyphens (U+2011) inside ids,
+uses fullwidth brackets 【…】, and groups keys as [A, B]. All of these are normalised to [A][B] before
+validation; anything inside brackets that is not a list of citation keys is left untouched.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +11,18 @@ import re
 
 from app.schemas.common import Citation
 
-CITATION = re.compile(r"\[((?:P[0-9]+-[A-Z]+-[0-9]{3}#[0-9]+)|(?:sql#[0-9]+))\]")
+KEY = re.compile(r"^(?:P[0-9]+-[A-Z]+-[0-9]{3}#[0-9]+|sql#[0-9]+)$")
+BRACKET = re.compile(r"[\[【]([^\[\]【】\n]{1,300})[\]】]")
+_SPLIT = re.compile(r"[,;]\s*|\s+")
+_DASHES = dict.fromkeys(map(ord, "‐‑‒–—−﹣－"), "-")
+
+
+def _keys(inner: str) -> list[str] | None:
+    """The citation keys in one bracket, or None when the bracket is not a citation group."""
+    tokens = [t.split("†")[0].strip() for t in _SPLIT.split(inner.translate(_DASHES).strip()) if t.strip()]
+    if tokens and all(KEY.match(t) for t in tokens):
+        return tokens
+    return None
 
 
 def _citation(key: str, valid: bool) -> Citation:
@@ -22,15 +38,20 @@ def validate_citations(text: str, valid_ids: set[str]) -> tuple[str, list[Citati
 
     def repl(m: re.Match[str]) -> str:
         nonlocal removed
-        key = m.group(1)
-        ok = key in valid_ids
-        seen.setdefault(key, _citation(key, ok))
-        if ok:
+        keys = _keys(m.group(1))
+        if keys is None:
             return m.group(0)
-        removed += 1
-        return ""
+        kept: list[str] = []
+        for key in keys:
+            ok = key in valid_ids
+            seen.setdefault(key, _citation(key, ok))
+            if ok:
+                kept.append(f"[{key}]")
+            else:
+                removed += 1
+        return "".join(kept)
 
-    clean = CITATION.sub(repl, text)
+    clean = BRACKET.sub(repl, text)
     clean = re.sub(r"[ \t]{2,}", " ", clean).replace(" .", ".").strip()
     ordered = [c for c in seen.values() if c.valid] + [c for c in seen.values() if not c.valid]
     return clean, ordered, removed
