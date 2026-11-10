@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     app_env: Literal["dev", "test", "ci", "prod"] = "dev"
     log_level: str = "INFO"
 
-    database_admin_url: str = "postgresql://copilot:copilot@localhost:5432/copilot"
-    database_url: str = "postgresql://copilot_app:copilot_app@localhost:5432/copilot"
-    database_ro_url: str = "postgresql://copilot_readonly:copilot_readonly@localhost:5432/copilot"
+    database_admin_url: str = "postgresql://copilot:copilot@localhost:5433/copilot"
+    database_url: str = "postgresql://copilot_app:copilot_app@localhost:5433/copilot"
+    database_ro_url: str = "postgresql://copilot_readonly:copilot_readonly@localhost:5433/copilot"
     db_pool_min: int = 1
     db_pool_max: int = 10
 
