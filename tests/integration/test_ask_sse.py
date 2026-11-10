@@ -127,3 +127,14 @@ async def test_rate_limit_returns_429_with_retry_after() -> None:
         ok = await c.post("/ask", json={"question": "x"}, headers={"X-User-Email": "carol@example.test"})
         limited = await c.post("/ask", json={"question": "x"}, headers={"X-User-Email": "carol@example.test"})
     assert ok.status_code == 200 and limited.status_code == 429 and int(limited.headers["Retry-After"]) >= 1
+
+
+async def test_header_identity_is_refused_in_prod() -> None:
+    prov = ScriptedProvider()
+    app = create_app(make_settings(app_env="prod"), prov)
+    async with (
+        app.router.lifespan_context(app),
+        httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c,
+    ):
+        r = await c.post("/ask", json={"question": "x"}, headers={"X-User-Email": "carol@example.test"})
+    assert r.status_code == 503

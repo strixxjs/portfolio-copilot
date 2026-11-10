@@ -24,6 +24,11 @@ async def load_principal(db: Database, email: str) -> Principal | None:
 
 
 async def get_current_user(request: Request, x_user_email: str | None = Header(default=None)) -> Principal:
+    settings = request.app.state.services.settings
+    if settings.auth_mode != "header":
+        raise HTTPException(status_code=501, detail="AUTH_MODE=oidc is not implemented in this version")
+    if settings.is_prod:
+        raise HTTPException(status_code=503, detail="header identity is disabled when APP_ENV=prod")
     if not x_user_email:
         raise HTTPException(status_code=401, detail="missing X-User-Email")
     principal = await load_principal(request.app.state.services.db, x_user_email.strip().lower())
