@@ -13,7 +13,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.api.sse import encode
 from app.auth import get_current_user
-from app.gateway.types import Budget, RequestContext
+from app.gateway.types import Budget, ProviderError, RequestContext
 from app.orchestration.loop import AgentLoop
 from app.schemas.api import AskRequest
 from app.schemas.common import AnswerStatus, Principal
@@ -52,9 +52,24 @@ async def run_question(services: Services, principal: Principal, body: AskReques
     try:
         async for ev in loop.run(body.question, body.project_id):
             yield ev
-    except asyncio.CancelledError:
+    except GeneratorExit:
+        # sse-starlette closes the generator when the client goes away; this is not an application error.
         error = "client_disconnected"
         raise
+    except asyncio.CancelledError:
+        error = "cancelled"
+        raise
+    except ProviderError as e:
+        error = f"provider_{e.status or 'unreachable'}"
+        log.warning("ask_provider_error trace_id=%s status=%s retry_after=%s", trace_id, e.status, e.retry_after_s)
+        yield ErrorEvent(
+            trace_id=trace_id,
+            ts_ms=tracer.elapsed_ms(),
+            code="provider_rate_limited" if e.status == 429 else "provider_error",
+            message=f"the model provider failed (HTTP {e.status or 'n/a'}); see trace {trace_id}",
+        )
+        loop.status = AnswerStatus.ERROR
+        yield loop.done_event(AnswerStatus.ERROR)
     except Exception as e:
         error = type(e).__name__
         log.exception("ask_failed trace_id=%s", trace_id)
