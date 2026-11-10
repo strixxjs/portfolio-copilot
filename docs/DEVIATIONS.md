@@ -16,3 +16,5 @@
 - 8 — MCP server uses the low-level `mcp.server.lowlevel.Server` instead of `FastMCP`, so `inputSchema` is exactly `Tool.spec().parameters` (FastMCP re-derives schemas from Python signatures).
 - lint — `line-length` 120 and a few documented ignores in `pyproject.toml` (complexity rules for the loop/eval, contract exception names, prompt text).
 - 9 — Dockerfile installs dependencies with `--no-install-project` first and the project after `COPY . .` (the planned single `uv sync` before the source copy cannot build the editable project). Added `.dockerignore`.
+- eval — After the first live run: `sql_exact_match` compares the expected value with any column of the first row of the last successful query (the model picks column order; the value is what is graded). Before, only the first column counted. Recorded here because it changed after seeing live results.
+- live run 1 fixes — citation normalisation (U+2011 hyphens, 【】, grouped keys), outline on wrong section names, provider-rejected tool calls repaired instead of erroring. Each is a separate commit with a test.
