@@ -68,6 +68,7 @@ class LoopState:
     flags: DoneFlags = field(default_factory=DoneFlags)
     tool_calls: int = 0
     route: Route | None = None
+    seen_calls: set[str] = field(default_factory=set)
 
     def valid_source_ids(self) -> set[str]:
         return set(self.retrieved) | {f"sql#{i + 1}" for i in range(len(self.sql_results))}
@@ -331,6 +332,19 @@ class AgentLoop:
                 yield ev
             return
 
+        fingerprint = tool.name + ":" + args.model_dump_json()
+        if fingerprint in self.state.seen_calls:
+            # Identical call already ran in this request: answer from memory instead of paying for it again.
+            dup = ToolError(
+                code="invalid_args",
+                message="duplicate call: these exact arguments already ran in "
+                "this request; use that result or answer now",
+                retryable=False,
+            )
+            for ev in fail(dup, args.model_dump(mode="json")):
+                yield ev
+            return
+        self.state.seen_calls.add(fingerprint)
         yield self._ev(
             ToolCallEvent,
             turn=turn,

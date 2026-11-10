@@ -215,3 +215,26 @@ def test_groq_validation_error_is_mapped() -> None:
 
     err = map_error(RuntimeError("Tool call validation failed: parameters for tool search_documents did not match"))
     assert isinstance(err, ToolCallRejected) and err.tool == "search_documents" and not err.retryable
+
+
+async def test_identical_repeated_call_is_not_executed_twice() -> None:
+    runs = {"n": 0}
+
+    class Counting(FakeSearch):
+        async def run(self, args: SearchDocumentsInput, ctx: ToolContext) -> SearchDocumentsOutput:
+            runs["n"] += 1
+            return await super().run(args, ctx)
+
+    prov = CannedProvider(
+        [
+            route("documents"),
+            call('{"query": "rebar"}', "c1"),
+            call('{"query": "rebar"}', "c2"),
+            fake_response("Ok [P1-RFI-003#2]."),
+        ]
+    )
+    events, _ = await run(prov, tool=Counting())
+    summaries = [e for e in events if e.type == "tool_result_summary"]
+    assert runs["n"] == 1
+    assert summaries[1].ok is False and summaries[1].error.message.startswith("duplicate call")
+    assert events[-1].status == "answered" and events[-1].flags.tools_disabled == []

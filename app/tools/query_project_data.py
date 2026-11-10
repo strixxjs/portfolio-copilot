@@ -60,7 +60,8 @@ class QueryProjectDataTool(Tool[QueryProjectDataInput, QueryProjectDataOutput]):
     name = "query_project_data"
     description = (
         "Answer a quantitative question (counts, sums, comparisons, dates) over structured project data: projects, "
-        "change orders, budget lines, milestones. Returns the SQL used and up to 200 rows. Cite results as [sql#n]."
+        "change orders, budget lines, milestones. Pass the exact question (e.g. 'largest approved change order on P1'); "
+        "the database sorts and aggregates. Returns the SQL used and up to 200 rows. Cite results as [sql#n]."
     )
     input_model = QueryProjectDataInput
     output_model = QueryProjectDataOutput
