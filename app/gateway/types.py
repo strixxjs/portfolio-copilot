@@ -174,6 +174,18 @@ class ProviderError(GatewayError):
         self.retry_after_s = retry_after_s
 
 
+class ToolCallRejected(ProviderError):
+    """The provider validated the model's tool call against the schema and refused it (Groq: tool_use_failed).
+
+    Not a transport failure: the loop treats it like invalid tool arguments and gives the model one repair.
+    """
+
+    def __init__(self, detail: str, tool: str | None) -> None:
+        super().__init__(f"tool call rejected by provider: {detail}", status=400, retryable=False)
+        self.detail = detail
+        self.tool = tool
+
+
 class Provider(Protocol):
     name: str
 

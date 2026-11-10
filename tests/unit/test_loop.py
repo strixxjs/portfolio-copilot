@@ -192,3 +192,26 @@ async def test_tokens_carry_turn_numbers() -> None:
     prov = CannedProvider([route("documents"), call('{"query": "rebar"}'), fake_response("Answer [P1-RFI-003#2].")])
     events, _ = await run(prov)
     assert {e.turn for e in events if e.type == "token"} == {1}
+
+
+async def test_provider_rejected_tool_call_gets_one_repair() -> None:
+    from app.gateway.types import ToolCallRejected
+
+    rejected = ToolCallRejected("parameters for tool search_documents did not match schema", "search_documents")
+    prov = CannedProvider(
+        [route("documents"), rejected, call('{"query": "rebar"}'), fake_response("Ok [P1-RFI-003#2].")]
+    )
+    events, _ = await run(prov)
+    summaries = [e for e in events if e.type == "tool_result_summary"]
+    assert summaries[0].ok is False and summaries[0].error.code == "invalid_args" and summaries[0].error.retryable
+    assert summaries[1].ok is True
+    assert events[-1].status == "answered"
+    assert any("rejected" in (m.content or "") for m in prov.requests[2].messages)
+
+
+def test_groq_validation_error_is_mapped() -> None:
+    from app.gateway.providers.openai_compat import map_error
+    from app.gateway.types import ToolCallRejected
+
+    err = map_error(RuntimeError("Tool call validation failed: parameters for tool search_documents did not match"))
+    assert isinstance(err, ToolCallRejected) and err.tool == "search_documents" and not err.retryable

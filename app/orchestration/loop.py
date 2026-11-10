@@ -28,6 +28,7 @@ from app.gateway.types import (
     TextDelta,
     Tier,
     ToolCall,
+    ToolCallRejected,
 )
 from app.orchestration.citations import strip_canaries, validate_citations
 from app.orchestration.prompts import ANSWERER_SYSTEM, FORCED_FINAL, render_error, user_message
@@ -186,6 +187,10 @@ class AgentLoop:
                     else:
                         yield item
                 break
+            except ToolCallRejected as rejected:
+                for ev in self._provider_rejected(rejected, turn, messages):
+                    yield ev
+                continue
             resp = got[0]
             if not resp.tool_calls:
                 final_text = resp.content or ""
@@ -231,6 +236,44 @@ class AgentLoop:
             yield self._deterministic_partial()
             return
         yield got[0].content or ""
+
+    def _provider_rejected(self, e: ToolCallRejected, turn: int, messages: list[Message]) -> list[Any]:
+        """The provider refused a malformed tool call before we saw it. Same policy as invalid_args:
+        one repair per tool, then the tool is disabled. The model is told why via a user message."""
+        name = e.tool or "unknown_tool"
+        self.state.repairs[name] += 1
+        retryable = self.state.repairs[name] <= 1
+        if not retryable and name not in self.state.disabled:
+            self.state.disabled.add(name)
+            self.state.flags.tools_disabled.append(name)
+        hint = (
+            "Call the tool again with arguments that match its schema exactly."
+            if retryable
+            else (f"The tool {name} is now disabled; answer from what you have.")
+        )
+        messages.append(Message(role=Role.USER, content=f"Your previous tool call was rejected: {e.detail}. {hint}"))
+        err = ToolError(code="invalid_args", message=e.detail[:300], retryable=retryable)
+        call_id = f"rejected_{turn}"
+        return [
+            self._ev(
+                ToolCallEvent,
+                turn=turn,
+                call_id=call_id,
+                tool=name,
+                args={"raw": "<rejected by provider>"},
+                repair=self.state.repairs[name] > 1,
+            ),
+            self._ev(
+                ToolResultSummaryEvent,
+                turn=turn,
+                call_id=call_id,
+                tool=name,
+                ok=False,
+                duration_ms=0,
+                summary="error: invalid_args (rejected by provider)",
+                error=ToolErrorInfo(code=err.code, message=err.message, retryable=err.retryable),
+            ),
+        ]
 
     def _deterministic_partial(self) -> str:
         hits = sorted(self.state.retrieved.values(), key=lambda h: (h.rank or 999, h.chunk_id))[:5]

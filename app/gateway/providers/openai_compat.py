@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from collections.abc import AsyncIterator
 from typing import Any
@@ -21,6 +22,7 @@ from app.gateway.types import (
     TextDelta,
     ToolCall,
     ToolCallDelta,
+    ToolCallRejected,
     Usage,
     estimate_tokens,
 )
@@ -48,7 +50,14 @@ def _retry_after(headers: Any) -> float | None:
         return None
 
 
+_REJECTED_TOOL = re.compile(r"for tool (\w+)")
+
+
 def map_error(e: Exception) -> ProviderError:
+    text = str(e)
+    if "tool_use_failed" in text or "tool call validation failed" in text.lower():
+        m = _REJECTED_TOOL.search(text)
+        return ToolCallRejected(text[:400], m.group(1) if m else None)
     if isinstance(e, openai.APIStatusError):
         status = e.status_code
         retryable = status in RETRYABLE_STATUS or status >= 500
