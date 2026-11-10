@@ -34,6 +34,16 @@ ORDER BY c.seq
 """
 
 
+class SectionNotFound(Exception):
+    """The document is visible but has no such section; carries the outline so the model can retry."""
+
+    def __init__(self, doc_id: str, section: str | None, sections: list[str]) -> None:
+        super().__init__(f"section {section!r} not found in {doc_id}")
+        self.doc_id = doc_id
+        self.section = section
+        self.sections = sections
+
+
 async def open_section(
     db: Database, principal: Principal, args: OpenDocumentSectionInput
 ) -> OpenDocumentSectionOutput | None:
@@ -46,7 +56,8 @@ async def open_section(
             section = outline[0]
         rows = await conn.fetch(SECTION_SQL, principal.user_id, args.doc_id, section, args.chunk_seq, args.window)
     if not rows:
-        return None
+        # Visible document, wrong section name: safe to show its outline (no existence leak).
+        raise SectionNotFound(args.doc_id, section, outline)
     chunks = [
         ChunkHit(
             chunk_id=r["chunk_id"],

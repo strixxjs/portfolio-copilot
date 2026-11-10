@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.retrieval.navigation import open_section
+from app.retrieval.navigation import SectionNotFound, open_section
 from app.schemas.tools import OpenDocumentSectionInput, OpenDocumentSectionOutput
 from app.tools.base import Tool, ToolContext, ToolError, ToolFailure, ToolResultSummary
 from app.tools.search_documents import render_hits
@@ -18,7 +18,18 @@ class OpenDocumentSectionTool(Tool[OpenDocumentSectionInput, OpenDocumentSection
     output_model = OpenDocumentSectionOutput
 
     async def run(self, args: OpenDocumentSectionInput, ctx: ToolContext) -> OpenDocumentSectionOutput:
-        out = await open_section(ctx.db, ctx.principal, args)
+        try:
+            out = await open_section(ctx.db, ctx.principal, args)
+        except SectionNotFound as e:
+            raise ToolFailure(
+                ToolError(
+                    code="not_found",
+                    message=f"section {e.section!r} not found in {e.doc_id}; available sections: "
+                    + ", ".join(e.sections),
+                    details={"sections": e.sections},
+                    retryable=True,
+                )
+            ) from e
         if out is None:
             # Identical wording for "does not exist" and "no access": no existence leak.
             raise ToolFailure(

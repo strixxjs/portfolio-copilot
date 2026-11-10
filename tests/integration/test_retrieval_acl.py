@@ -83,3 +83,13 @@ async def test_open_section_no_existence_leak(services: Any) -> None:
     assert await open_section(services.db, alice, OpenDocumentSectionInput(doc_id="P1-ZZZ-999")) is None
     opened = await open_section(services.db, alice, OpenDocumentSectionInput(doc_id="P1-RFI-003", section="response"))
     assert opened is not None and opened.chunks[0].chunk_id == "P1-RFI-003#2" and len(opened.sections) == 4
+
+
+async def test_wrong_section_on_visible_doc_returns_outline(services: Any) -> None:
+    from app.retrieval.navigation import SectionNotFound
+
+    carol = await load_principal(services.db, "carol@example.test")
+    assert carol is not None
+    with pytest.raises(SectionNotFound) as e:
+        await open_section(services.db, carol, OpenDocumentSectionInput(doc_id="P1-CO-005", section="Details"))
+    assert "Justification" in e.value.sections
