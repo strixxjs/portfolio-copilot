@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     llm_reasoning_effort: Literal["low", "medium", "high"] = "low"
     llm_timeout_s: float = 60.0
     llm_max_retries: int = 3
+    # A Retry-After above this is a quota, not a burst: fail the call now instead of sleeping inside a request.
+    llm_retry_after_max_s: float = 10.0
     llm_max_concurrency: int = 2
     llm_cache_enabled: bool = True
     llm_cache_ttl_s: int = 3600

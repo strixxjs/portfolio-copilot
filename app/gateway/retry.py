@@ -23,6 +23,7 @@ async def with_retry(
     attempts: int,
     base_s: float = 0.5,
     cap_s: float = 8.0,
+    retry_after_max_s: float = 10.0,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     on_attempt: Callable[[int], None] | None = None,
 ) -> T:
@@ -34,10 +35,14 @@ async def with_retry(
             return await fn()
         except ProviderError as e:
             last = e
+            if e.retry_after_s is not None and e.retry_after_s > retry_after_max_s:
+                # The provider asked for a wait longer than a request may take (daily quota):
+                # no retry inside this request can succeed, so do not spend capped sleeps on it.
+                e.retryable = False
             if not e.retryable or n == attempts - 1:
                 raise
             delay = backoff_delay(n, base_s, cap_s)
             if e.retry_after_s and e.retry_after_s > delay:
-                delay = min(e.retry_after_s, cap_s * 4)
+                delay = e.retry_after_s
             await sleep(delay)
     raise last if last is not None else RuntimeError("with_retry made no attempts")

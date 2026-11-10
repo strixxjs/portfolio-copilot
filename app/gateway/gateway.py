@@ -102,6 +102,18 @@ class LLMGateway:
             "finish_reason": resp.finish_reason,
         }
 
+    @staticmethod
+    def _fail_attrs(req: LLMRequest, model: str, attempts: int, e: ProviderError) -> dict[str, object]:
+        return {
+            "tier": req.tier.value,
+            "model": model,
+            "purpose": req.purpose,
+            "attempts": attempts,
+            "error": type(e).__name__,
+            "status": e.status,
+            "retry_after_s": e.retry_after_s,
+        }
+
     async def complete(self, req: LLMRequest, ctx: RequestContext) -> LLMResponse:
         model, price = self.resolve_model(req.tier)
         self._precheck(req, ctx, price)
@@ -122,12 +134,18 @@ class LLMGateway:
                     nonlocal attempts
                     attempts = n
 
-                async with self._sem:
-                    resp = await with_retry(
-                        lambda: self.provider.complete(req, model),
-                        attempts=self.settings.llm_max_retries,
-                        on_attempt=count,
-                    )
+                try:
+                    async with self._sem:
+                        resp = await with_retry(
+                            lambda: self.provider.complete(req, model),
+                            attempts=self.settings.llm_max_retries,
+                            retry_after_max_s=self.settings.llm_retry_after_max_s,
+                            on_attempt=count,
+                        )
+                except ProviderError as e:
+                    if span is not None:
+                        span.attrs.update(self._fail_attrs(req, model, attempts, e))
+                    raise
                 resp.attempts = attempts
             resp = self._account(resp, price, ctx)
             if key and self.cache is not None and not resp.cached:
@@ -156,23 +174,33 @@ class LLMGateway:
             else:
                 resp = None
                 attempts = 0
-                async with self._sem:
-                    while resp is None:
-                        attempts += 1
-                        emitted = False
-                        try:
-                            async for ev in self.provider.stream(req, model):
-                                if isinstance(ev, StreamEnd):
-                                    resp = ev.response
-                                else:
-                                    emitted = True
-                                    yield ev
-                        except ProviderError as e:
-                            # Retrying after output reached the client would duplicate text.
-                            if emitted or not e.retryable or attempts >= self.settings.llm_max_retries:
-                                raise
-                            delay = max(backoff_delay(attempts - 1, 0.5, 8.0), e.retry_after_s or 0.0)
-                            await asyncio.sleep(min(delay, 32.0))
+                try:
+                    async with self._sem:
+                        while resp is None:
+                            attempts += 1
+                            emitted = False
+                            try:
+                                async for ev in self.provider.stream(req, model):
+                                    if isinstance(ev, StreamEnd):
+                                        resp = ev.response
+                                    else:
+                                        emitted = True
+                                        yield ev
+                            except ProviderError as e:
+                                too_long = (
+                                    e.retry_after_s is not None
+                                    and e.retry_after_s > self.settings.llm_retry_after_max_s
+                                )
+                                # Retrying after output reached the client would duplicate text; a Retry-After
+                                # longer than a request may take (daily quota) cannot succeed inside this request.
+                                if emitted or not e.retryable or too_long or attempts >= self.settings.llm_max_retries:
+                                    raise
+                                delay = max(backoff_delay(attempts - 1, 0.5, 8.0), e.retry_after_s or 0.0)
+                                await asyncio.sleep(delay)
+                except ProviderError as e:
+                    if span is not None:
+                        span.attrs.update(self._fail_attrs(req, model, attempts, e))
+                    raise
                 if resp is not None:
                     resp.attempts = attempts
             if resp is None:  # unreachable: the loop exits only with a response or an exception

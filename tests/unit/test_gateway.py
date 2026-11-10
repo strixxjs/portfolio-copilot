@@ -194,3 +194,19 @@ async def test_openai_compat_assembles_interleaved_tool_call_deltas() -> None:
         ToolCall(id="call_b", name="query_project_data", arguments='{"question": "sum"}'),
     ]
     assert end.response.usage.prompt_tokens == 50 and not end.response.usage.estimated
+
+
+async def test_long_retry_after_fails_fast_without_sleeping() -> None:
+    sleeps: list[float] = []
+    calls = {"n": 0}
+
+    async def fn() -> str:
+        calls["n"] += 1
+        raise ProviderError("429", status=429, retryable=True, retry_after_s=3600.0)
+
+    async def fake_sleep(d: float) -> None:
+        sleeps.append(d)
+
+    with pytest.raises(ProviderError):
+        await with_retry(fn, attempts=3, sleep=fake_sleep, retry_after_max_s=10.0)
+    assert calls["n"] == 1 and sleeps == []
