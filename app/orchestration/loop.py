@@ -431,4 +431,5 @@ class AgentLoop:
             sql=summary.sql,
             row_count=summary.row_count,
             rows_preview=summary.rows_preview,
+            projects=summary.projects,
         )

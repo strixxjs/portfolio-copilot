@@ -112,6 +112,7 @@ async def test_sql_rls_drops_rows_of_invisible_projects(client: Any) -> None:
     events = await ask(c, "bob@example.test", "Approved change order totals per project?")
     summary = next(e for e in events if e["type"] == "tool_result_summary")
     assert summary["ok"] and {r["project_id"] for r in summary["rows_preview"]} == {"P1"}
+    assert summary["projects"] == ["P1"]
     assert "semantic.change_orders" in summary["sql"]
 
 

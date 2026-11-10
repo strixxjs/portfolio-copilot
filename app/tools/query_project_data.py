@@ -56,6 +56,15 @@ def json_safe(value: Any) -> Any:
     return value
 
 
+_PROJECT_IN_VALUE = re.compile(r"^(P[0-9]+)(?:-|$)")
+
+
+def projects_in_rows(rows: list[dict[str, Any]]) -> list[str]:
+    """Every project code that appears in any cell (P2, P2-CO-003 -> P2). Used by the eval leak gate."""
+    found = {m.group(1) for r in rows for v in r.values() if isinstance(v, str) and (m := _PROJECT_IN_VALUE.match(v))}
+    return sorted(found)
+
+
 class QueryProjectDataTool(Tool[QueryProjectDataInput, QueryProjectDataOutput]):
     name = "query_project_data"
     description = (
@@ -161,4 +170,5 @@ class QueryProjectDataTool(Tool[QueryProjectDataInput, QueryProjectDataOutput]):
             sql=out.sql,
             row_count=out.row_count,
             rows_preview=out.rows[:5],
+            projects=projects_in_rows(out.rows),
         )

@@ -129,13 +129,14 @@ async def run_one(
     if any(e["type"] == "error" for e in events):
         error = error or "error_event"
     retrieved: list[str] = []
-    sql_rows: list[dict[str, Any]] = []
+    projects_seen: set[str] = set()
     sql_first: Any = None
     for ev in events:
         if ev["type"] == "tool_result_summary" and ev["ok"]:
             retrieved += [h["doc_id"] for h in ev.get("hits", [])]
             if ev["tool"] == "query_project_data":
-                sql_rows += ev.get("rows_preview", [])
+                # `projects` covers every returned row; `rows_preview` is a display aid, not the gate.
+                projects_seen.update(ev.get("projects") or _projects_in_rows(ev.get("rows_preview", [])))
                 preview = ev.get("rows_preview") or []
                 sql_first = preview[0] if preview else None
     cited = [c["doc_id"] for c in (cits or {}).get("citations", []) if c.get("valid") and c.get("doc_id")]
@@ -146,7 +147,7 @@ async def run_one(
         bad = [d for d in cited if rx.search(d)]
     else:
         bad = []
-    sql_projects = _projects_in_rows(sql_rows)
+    sql_projects = sorted(projects_seen)
     leaks = find_leaks(retrieved, cited, sql_projects, visible_docs, visible_projects) + bad
     recall = (len(set(exp.recall_docs) & set(retrieved)) / len(exp.recall_docs)) if exp.recall_docs else None
     usage = (done or {}).get("usage", {})

@@ -62,6 +62,7 @@ class ToolResultSummaryEvent(BaseEvent):
     sql: str | None = None
     row_count: int | None = None
     rows_preview: list[dict[str, Any]] = Field(default_factory=list, description="At most 5 rows")
+    projects: list[str] = Field(default_factory=list, description="Project codes present in any returned row")
     error: ToolErrorInfo | None = None
 
 
