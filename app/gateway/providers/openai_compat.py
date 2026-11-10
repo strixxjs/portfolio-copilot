@@ -55,7 +55,13 @@ _REJECTED_TOOL = re.compile(r"for tool (\w+)")
 
 def map_error(e: Exception) -> ProviderError:
     text = str(e)
-    if "tool_use_failed" in text or "tool call validation failed" in text.lower():
+    lowered = text.lower()
+    # Groq aborts the stream when the model's tool call is malformed: schema mismatch ("tool call validation
+    # failed") or unparseable output ("Parsing failed ... failed_generation"). Both are model errors the
+    # model can fix on the next turn, not transport errors.
+    if any(
+        s in lowered for s in ("tool_use_failed", "tool call validation failed", "failed_generation", "parsing failed")
+    ):
         m = _REJECTED_TOOL.search(text)
         return ToolCallRejected(text[:400], m.group(1) if m else None)
     if isinstance(e, openai.APIStatusError):

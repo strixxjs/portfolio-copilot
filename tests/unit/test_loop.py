@@ -238,3 +238,16 @@ async def test_identical_repeated_call_is_not_executed_twice() -> None:
     assert runs["n"] == 1
     assert summaries[1].ok is False and summaries[1].error.message.startswith("duplicate call")
     assert events[-1].status == "answered" and events[-1].flags.tools_disabled == []
+
+
+def test_groq_parse_failure_is_mapped_to_repairable_rejection() -> None:
+    from app.gateway.providers.openai_compat import map_error
+    from app.gateway.types import ToolCallRejected
+
+    err = map_error(
+        RuntimeError(
+            "Parsing failed. The model generated output that could not be parsed. "
+            "See 'failed_generation' for more details."
+        )
+    )
+    assert isinstance(err, ToolCallRejected) and err.tool is None
