@@ -1,0 +1,42 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: copilot
+      POSTGRES_USER: copilot
+      POSTGRES_PASSWORD: copilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U copilot -d copilot"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build:
+      context: .
+      target: dev
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_ADMIN_URL: postgresql://copilot:copilot@db:5432/copilot
+      DATABASE_URL: postgresql://copilot_app:copilot_app@db:5432/copilot
+      DATABASE_RO_URL: postgresql://copilot_readonly:copilot_readonly@db:5432/copilot
+      FASTEMBED_CACHE_PATH: /models
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/workspace
+      - models:/models
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata: {}
+  models: {}

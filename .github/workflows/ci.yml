@@ -1,0 +1,83 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-type:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - run: make lint PY="uv run"
+      - run: make typecheck PY="uv run"
+
+  test-and-offline-eval:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: copilot
+          POSTGRES_USER: copilot
+          POSTGRES_PASSWORD: copilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U copilot -d copilot"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      APP_ENV: ci
+      LLM_PROVIDER: fake
+      DATABASE_ADMIN_URL: postgresql://copilot:copilot@localhost:5432/copilot
+      DATABASE_URL: postgresql://copilot_app:copilot_app@localhost:5432/copilot
+      DATABASE_RO_URL: postgresql://copilot_readonly:copilot_readonly@localhost:5432/copilot
+      FASTEMBED_CACHE_PATH: ${{ github.workspace }}/.fastembed_cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - name: Cache embedding and reranker models
+        uses: actions/cache@v4
+        with:
+          path: .fastembed_cache
+          key: fastembed-${{ runner.os }}-bge-small-en-v1.5-minilm-l6-v2
+      - run: make migrate PY="uv run"
+      - run: make seed PY="uv run"
+      - run: make test PY="uv run"
+      - run: make eval-offline PY="uv run"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: eval/results/
+          if-no-files-found: ignore
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: tf
+        run: |
+          if ls infra/terraform/*.tf >/dev/null 2>&1; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: hashicorp/setup-terraform@v3
+        if: steps.tf.outputs.present == 'true'
+        with:
+          terraform_version: "1.9.8"
+      - run: make tf-validate
+        if: steps.tf.outputs.present == 'true'
