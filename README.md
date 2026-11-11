@@ -205,7 +205,8 @@ tool schemas (provider-dependent); a smaller strong model for `final` calls.
 
 ## Limitations
 
-- Synthetic corpus of 111 documents; retrieval quality and latency at scale are not measured here.
+- Synthetic corpus of 111 documents; retrieval quality and latency at scale are not measured here. The design for
+  terabytes per client, with capacity estimates and a measure-first plan, is in [`docs/SCALING.md`](docs/SCALING.md).
 - No Terraform in this version (cut for time); the CI job is in place and runs when `infra/terraform/` exists.
 - Single-process rate limiter and cache; Bedrock is an interface stub; Groq and OpenAI are implemented.
 - Groq tool-call rejections and output-parse failures are recognised by matching the provider's error text.
@@ -214,6 +215,9 @@ tool schemas (provider-dependent); a smaller strong model for `final` calls.
   makes the leak detectable and removable.
 
 ## Scaling to 1M+ documents / 10+ TB per client (design notes, not built)
+
+Short version below; the full design (capacity model, ingestion, revisions, ACL at scale, costs, rollout plan) is in
+[`docs/SCALING.md`](docs/SCALING.md).
 
 - **Ingestion.** A queue-driven pipeline (parse/OCR → chunk by section with page anchors → embed in batches →
   upsert) keyed by document version so re-runs are idempotent; an `ingestion_runs` table with per-document status
